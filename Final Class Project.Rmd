@@ -555,14 +555,8 @@ Ferrari, B. (2021). Persistence and resistance: Survival mechanisms of Candidatu
 
 Montgomery, Kate, Timothy J. Williams, Merryn Brettle, Jonathan F. Berengut, Angelique E. Ray, Eden Zhang, Julian Zaugg, Philip Hugenholtz, and Belinda C. Ferrari. 2021. “Persistence and Resistance: Survival Mechanisms of Candidatus Dormibacterota from Nutrient-Poor 
 
-```{r}
-library(usethis)
-use_git_config(user.name = "Tanvi Manjrekar", user.email = "tmanjrekar@umass.edu")
-```
 
-```{r}
-usethis::create_github_token()
-```
+
 
 
 
