@@ -1,6 +1,6 @@
 ---
 title: "Final Class Project"
-author: 'Tanvi Manjrekar, Joy T'
+author: 'Tanvi Manjrekar, Joy Tumusiime'
 date: "2024-05-16"
 output:
   html_document:
@@ -15,6 +15,8 @@ output:
 ---
 
 # Abstract:
+
+Various phylum were found Guanica State Forest including Actinobacteriota which is the most prevalant at this site. Elevation, soil temperatures, and pH are analyzed at this site. Dormibacterota are found in many ecosystem subtypes, but are most prevelant in shrublands and wetlands.The gene count was also analyzed for Dormibacterota. 
 
 
 # Motivating factors:
@@ -294,30 +296,37 @@ NEON_chemistry_GUAN %>%
 This graph showcases the relationship between the soil temperature and decimal latitude in water at Guanica State Forest. There seems to be a negative correlation linear relationship between these with one outlier.
 
 ```{r}
+# Select the GTDB Taxonomic lineage and separate into taxonomic levels
+sankey_data2 <- NEON_MAGs_co %>% 
+  select(`GTDB-Tk Taxonomy Lineage`) %>% 
+  # NAs are likely Archaea
+  replace_na(list(`GTDB-Tk Taxonomy Lineage` = 'Archaea')) %>% 
+  # Pavian format requires p__ etc
+  separate(`GTDB-Tk Taxonomy Lineage`, c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"), ";") 
+
 # Fill in the NAs with the taxonomic the higher taxonomic level to the left
-sankey_data[] <- t(apply(sankey_data, 1, zoo::na.locf))
+sankey_data2[] <- t(apply(sankey_data2, 1, zoo::na.locf))
 
 # Put the data into a format that can be read by the Sankey App
 
-sankey_data <- sankey_data %>% 
-  unite(col = "classification", c(Domain, Phylum, Class, Order, Family, Genus, Species), sep='; ') %>% 
-  mutate_at("classification", str_replace, "Archaea", "d__Archaea") %>% 
-  mutate_at("classification", str_replace, "Bacteria", "d__Bacteria") %>%  
-  mutate_at("classification", str_replace, "; ", "|p__") %>% 
-  mutate_at("classification", str_replace, "; ", "|c__") %>% 
-  mutate_at("classification", str_replace, "; ", "|o__") %>% 
-  mutate_at("classification", str_replace, "; ", "|f__") %>% 
-  mutate_at("classification", str_replace, "; ", "|g__") %>% 
-  mutate_at("classification", str_replace, "; ", "|s__")  
+sankey_data2 <- sankey_data2 %>% 
+  unite(col = "classification", c(Domain, Phylum, Class, Order, Family, Genus, Species), sep=';') %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") 
 
 # Create format for Pavian with counts for each taxonomic level
-sankey_data_s <- sankey_data
-sankey_data_g <- sankey_data
-sankey_data_f <- sankey_data
-sankey_data_o <- sankey_data
-sankey_data_c <- sankey_data
-sankey_data_p <- sankey_data
-sankey_data_d <- sankey_data
+sankey_data_s <- sankey_data2
+sankey_data_g <- sankey_data2
+sankey_data_f <- sankey_data2
+sankey_data_o <- sankey_data2
+sankey_data_c <- sankey_data2
+sankey_data_p <- sankey_data2
+sankey_data_d <- sankey_data2
 
 sankey_data_g$classification <- sub("\\|s__.*", "", sankey_data_g$classification)  
 sankey_data_f$classification <- sub("\\|g__.*", "", sankey_data_f$classification)  
@@ -332,9 +341,7 @@ sankey_data_allTaxa <- bind_rows(sankey_data_s, sankey_data_g, sankey_data_f, sa
 # rename for Pavian format
   rename(`#SampleID` = `classification`) %>% 
   rename(`Metaphlan2_Analysis` = `n`) 
-
-# Write file to input to Pavian Sankey
-write_tsv(sankey_data_allTaxa, "NEON_MAGs_2_pavian.txt")
+```
 ```
 
 ```{r}
@@ -473,31 +480,39 @@ ggplot(aes(x = fct_infreq(Genus), y = `Geographic Location`)) +
 ```
 This graph showcases the Genus in various geographic locations for Dormibacterota. 
 
+
 ```{r}
+# Select the GTDB Taxonomic lineage and separate into taxonomic levels
+sankey_data2 <- NEON_MAGs_co %>% 
+  select(`GTDB-Tk Taxonomy Lineage`) %>% 
+  # NAs are likely Archaea
+  replace_na(list(`GTDB-Tk Taxonomy Lineage` = 'Archaea')) %>% 
+  # Pavian format requires p__ etc
+  separate(`GTDB-Tk Taxonomy Lineage`, c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"), ";") 
+
 # Fill in the NAs with the taxonomic the higher taxonomic level to the left
-sankey_data[] <- t(apply(sankey_data, 1, zoo::na.locf))
+sankey_data2[] <- t(apply(sankey_data2, 1, zoo::na.locf))
 
 # Put the data into a format that can be read by the Sankey App
 
-sankey_data <- sankey_data %>% 
-  unite(col = "classification", c(Domain, Phylum, Class, Order, Family, Genus, Species), sep='; ') %>% 
-  mutate_at("classification", str_replace, "Archaea", "d__Archaea") %>% 
-  mutate_at("classification", str_replace, "Bacteria", "d__Bacteria") %>%  
-  mutate_at("classification", str_replace, "; ", "|p__") %>% 
-  mutate_at("classification", str_replace, "; ", "|c__") %>% 
-  mutate_at("classification", str_replace, "; ", "|o__") %>% 
-  mutate_at("classification", str_replace, "; ", "|f__") %>% 
-  mutate_at("classification", str_replace, "; ", "|g__") %>% 
-  mutate_at("classification", str_replace, "; ", "|s__")  
+sankey_data2 <- sankey_data2 %>% 
+  unite(col = "classification", c(Domain, Phylum, Class, Order, Family, Genus, Species), sep=';') %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") %>% 
+  mutate_at("classification", str_replace, ";", "|") 
 
 # Create format for Pavian with counts for each taxonomic level
-sankey_data_s <- sankey_data
-sankey_data_g <- sankey_data
-sankey_data_f <- sankey_data
-sankey_data_o <- sankey_data
-sankey_data_c <- sankey_data
-sankey_data_p <- sankey_data
-sankey_data_d <- sankey_data
+sankey_data_s <- sankey_data2
+sankey_data_g <- sankey_data2
+sankey_data_f <- sankey_data2
+sankey_data_o <- sankey_data2
+sankey_data_c <- sankey_data2
+sankey_data_p <- sankey_data2
+sankey_data_d <- sankey_data2
 
 sankey_data_g$classification <- sub("\\|s__.*", "", sankey_data_g$classification)  
 sankey_data_f$classification <- sub("\\|g__.*", "", sankey_data_f$classification)  
@@ -512,10 +527,8 @@ sankey_data_allTaxa <- bind_rows(sankey_data_s, sankey_data_g, sankey_data_f, sa
 # rename for Pavian format
   rename(`#SampleID` = `classification`) %>% 
   rename(`Metaphlan2_Analysis` = `n`) 
-
-# Write file to input to Pavian Sankey
-write_tsv(sankey_data_allTaxa, "NEON_MAGs_co_2_pavian.txt")
 ```
+
 
 ```{r}
 knitr::include_url("Exercise 2.html")
@@ -526,12 +539,12 @@ This Sankey Plot shows the combined assembilies for Dormibacterota.
 
 ## Discussion:
 
-Guanica State Forest has a diverse range of phylum with Actinobacteriota being the most prevalent phylum at this site. 
+Guanica State Forest was found to have six main phylums with Actinobacteriota being the most prevalent with 30 counts. There have been an additional 30 counts of novel bacteria at this site. The total MAGs for Actinobacteriota found at GUAN were between 20 and 40. There was found to be a negative correlation between the soil temperature and elevation at GUAN where the soil temperature was highest at the lowest elevation and lowest at the highest elevation. This correlates to the type of soil found at Guanica State Forest which are known to be dry and desert-like. The levels of pH in the soil in relation to elevation were inconsistent. Dormibacterota was found in six ecosubtypes mostly in wetlands and shrublands. Dormibacterota has a gene count of about 5000 which is around average compared to other phylums. Dormibacterota is also found mostly at National Grasslands LJB in Texas, USA. Dormibacterota is found in Grasslands where soil temperature is around 15-20C.
 
 
 ## Conclusion:
 
-
+Guanica State Forest is home to a diverse range of phylums with Actinobacteriota being the most prevelant. Actinobacteriota survives in these dry desert like conditions. Dormibacterota is found in a diverse range of ecosubtypes including wetlands and shrublands, it thrives in more wet soil environments. 
 
 
 ## References:
@@ -551,9 +564,7 @@ use_git_config(user.name = "Tanvi Manjrekar", user.email = "tmanjrekar@umass.edu
 usethis::create_github_token()
 ```
 
-```{r}
-gitcreds::gitcreds_set() 
-```
+
 
 
 
