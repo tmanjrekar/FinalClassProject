@@ -1,0 +1,315 @@
+---
+title: "Final Project"
+author: "Tanvi Manjrekar, Morgan Neal, Joy Tumusiime"
+output: html_document
+date: "2024-05-08"
+---
+
+# Abstract:
+
+
+# Motivating factors:
+
+The motivating factors for this experiment was to analyze the diversity of taxonomic groups at the Guanica Forest site. Knowing the diversity of taxonomic groups can allow researchers to understand what species can grow in certain areas around the world depending on the geography of the area. Additionally, analyzing the sites in which Dormibacterota was found allows researchers to understand where this certain type of species prefers to live in or thrives in. 
+
+# Introduction:
+
+Guánica State Forest is a subtropical dry forest in southwest Puerto Rico. It is the best preserved dry forest in the Caribbean. It has a warm climate with two rainy/ hurricane seasons. It is home to over 700 species of plants that are divided into three groups: deciduous forest, semi-evergreen forest, and scrub forest. Its most famous plant is a guaiac wood tree that could be as old as 1,000 years. This site is home to multiple different ecosystems including beaches, coral reefs, salt flats, mangrove forests, and limestone caverns. Half of Puerto Rico's birds occur in the Guánica State Forest and it is one of the few habitats where the Cook's pallid anole (lizard species) can be found. This forest has both marine and terrestrial wildlife, including coral reefs, birds, grasshoppers, ants, etc (Guanica).
+Dormibacterota is uncultured bacteria that is normally found in cold deserts (Ferrari) and are a phylum of oligotrophic bacteria that live under the soil. They are known for their survival mechanisms that allow them to survive under starvation conditions. They are thought to be aerobic heterotrophs and based on genome analysis, they have been found to synthesize, store, and break down glycogen. This phylum of bacteria is not very well researched since they are most commonly found in extremely cold environments. There is a lot of ongoing research that is looking into Dormibacterota phylogenetic relationships and their contribution to the environment in which they live. 
+
+# Methods:
+NEON MAGS Data for our site “Guanica State Forest and Biosphere Reserve '' and our phylum “Dormibacterota '' was analyzed using RStudio and RMarkdown. We imported this NEON MAGs Data into an R Markdown file and used various R markdown codes to organize the data into tables and graphs in order to be analyzed efficiently. 
+
+
+## Loading Libraries 
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(knitr)
+library(ggtree)
+```
+
+```{r}
+library(ggimage)
+library(rphylopic)
+```
+
+```{r}
+library(treeio)
+```
+
+```{r}
+library(tidytree)
+```
+
+```{r}
+library(ape)
+```
+
+```{r}
+library(TreeTools)
+```
+
+```{r}
+library(phytools)
+```
+
+## Reading the CSV
+
+```{r}
+NEON_MAGs <- read_csv("data/NEON/GOLD_Study_ID_Gs0161344_NEON.csv")
+
+head(NEON_MAGs)
+
+str(NEON_MAGs)
+
+NEON_MAGs_Ind <- NEON_MAGs %>% 
+  filter(`Genome Name` != "NEON combined assembly") 
+
+NEON_MAGs_Ind_tax <- NEON_MAGs_Ind %>% 
+  separate(`GTDB-Tk Taxonomy Lineage`, c("Domain", "Phylum", "Class", "Order", "Family", "Genus"), "; ", remove = FALSE)
+```
+
+
+```{r}
+NEON_MAGs <- read_csv("data/NEON/GOLD_Study_ID_Gs0161344_NEON.csv") %>% 
+  select(-c(`GOLD Study ID`, `Bin Methods`, `Created By`, `Date Added`)) %>% 
+  mutate("Assembly Type" = case_when(`Genome Name` == "NEON combined assembly" ~ `Genome Name`,
+                            TRUE ~ "Individual")) %>% 
+  mutate_at("Assembly Type", str_replace, "NEON combined assembly", "Combined") %>% 
+  separate(`GTDB-Tk Taxonomy Lineage`, c("Domain", "Phylum", "Class", "Order", "Family", "Genus"), "; ", remove = FALSE) %>% 
+  mutate_at("Genome Name", str_replace, "Terrestrial soil microbial communities from ", "") %>% 
+   separate(`Genome Name`, c("Site","Sample Name"), " - ") %>%
+   mutate_at("Sample Name", str_replace, "-comp-1", "") %>%
+  separate(`Sample Name`, c("Site ID","subplot.layer.date"), "_", remove = FALSE,) %>% 
+  separate(`subplot.layer.date`, c("Subplot", "Layer", "Date"), "-") 
+```
+
+## Table 
+
+```{r}
+kable(
+  NEON_MAGs_Ind_tax %>% 
+    count(Phylum, sort = TRUE)
+)
+```
+
+This table showcases the phylum count of Dormibacterota compared to other bacteria and Dormibacterota has second least count.  
+
+```{r}
+NEON_MAGs_bact_ind <- NEON_MAGs %>%
+  filter(Domain == "Bacteria") %>%
+  filter(`Assembly Type` == "Individual")
+
+
+```
+
+ 
+```{r}
+NEON_MAGs_bact_ind %>%
+  ggplot(aes(x = Phylum)) +
+  geom_bar() +
+  coord_flip()
+  labs(title = "Counts at Various Phylum", y = "Phylum", x= "Gene Counts")
+```
+
+This graph showcases the gene count of Dormibacterota. It has has an avaerge count compared to other phylums, but is on the lower end of that average. 
+
+
+```{r}
+
+NEON_MAGs_bact_ind %>%
+  ggplot(aes(x = fct_rev(fct_infreq(Phylum)), fill = Site)) +
+  geom_bar() +
+  coord_flip()
+  labs(title = "Sites vs Phylum", y = "Phylum", x= "Gene Counts")
+```
+
+This graph showcases the site in which Dormibacterota is found. It is usually found at Lower Teakettle in Sierra National Forest in California in the United States. 
+
+```{r}
+NEON_MAGs_bact_ind %>%   
+ggplot(aes(x = fct_infreq(Phylum), y = `Total Number of Bases`)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  labs(title = "Total Number of Bases at Various Phylum", y = "Total Number of Bases", x= "Phylum")
+```
+
+
+
+```{r}
+NEON_MAGs_bact_ind %>%
+  ggplot(aes(x = `Total Number of Bases`, y = `Gene Count`, color = Phylum)) +
+  geom_point() +
+  coord_flip()
+  labs(title = "Total Number of Bases at Phylum", y = "Total Number of Bases, x= "Gene Counts")
+```
+
+This graph showcases the total number of bases for Dormibacterota compared to other bacteria. 
+
+```{r}
+NEON_metagenomes <- read_tsv("data/NEON/exported_img_data_Gs0161344_NEON.tsv") %>% 
+  rename(`Genome Name` = `Genome Name / Sample Name`) %>% 
+  filter(str_detect(`Genome Name`, 're-annotation', negate = T)) %>% 
+  filter(str_detect(`Genome Name`, 'WREF plot', negate = T))
+```
+
+```{r}
+NEON_metagenomes <- NEON_metagenomes %>% 
+  # Get rid of the the common string "Soil microbial communities from "
+  mutate_at("Genome Name", str_replace, "Terrestrial soil microbial communities from ", "") %>% 
+  # Use the first `-` to split the column in two
+  separate(`Genome Name`, c("Site","Sample Name"), " - ") %>% 
+  # Get rid of the the common string "-comp-1"
+  mutate_at("Sample Name", str_replace, "-comp-1", "") %>%
+  # separate the Sample Name into Site ID and plot info
+  separate(`Sample Name`, c("Site ID","subplot.layer.date"), "_", remove = FALSE,) %>% 
+  # separate the plot info into 3 columns
+  separate(`subplot.layer.date`, c("Subplot", "Layer", "Date"), "-")
+```
+
+
+```{r}
+NEON_chemistry <- read_tsv("data/NEON/neon_plot_soilChem1_metadata.tsv") %>% 
+  # remove -COMP from genomicsSampleID
+  mutate_at("genomicsSampleID", str_replace, "-COMP", "")
+```
+
+
+```{r}
+NEON_FULL <- NEON_MAGs %>% 
+  left_join(NEON_metagenomes, by = c("Sample Name")) %>%
+  left_join(NEON_chemistry, by = c("Sample Name" = "genomicsSampleID"))
+```
+
+
+```{r}
+NEON_FULL_D <- NEON_FULL %>%
+  filter(str_detect(`Phylum`, "Dormibacterota"))
+```
+
+```{r}
+NEON_FULL_D %>%   
+ggplot(aes(x = `Site.x`, y = `soilInWaterpH`)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle=50, vjust=1, hjust=1))
+```
+
+
+
+
+
+```{r}
+NEON_MAGs <- read_csv("data/NEON/GOLD_Study_ID_Gs0161344_NEON_2024_4_21.csv") %>% 
+  # remove columns that are not needed for data analysis
+  select(-c(`GOLD Study ID`, `Bin Methods`, `Created By`, `Date Added`, `Bin Lineage`)) %>% 
+  # create a new column with the Assembly Type
+  mutate("Assembly Type" = case_when(`Genome Name` == "NEON combined assembly" ~ `Genome Name`,
+                            TRUE ~ "Individual")) %>% 
+  mutate_at("Assembly Type", str_replace, "NEON combined assembly", "Combined") %>% 
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "d__", "") %>%  
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "p__", "") %>% 
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "c__", "") %>% 
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "o__", "") %>% 
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "f__", "") %>% 
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "g__", "") %>% 
+  mutate_at("GTDB-Tk Taxonomy Lineage", str_replace, "s__", "") %>%
+  separate(`GTDB-Tk Taxonomy Lineage`, c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"), ";", remove = FALSE) %>% 
+  mutate_at("Domain", na_if,"") %>% 
+  mutate_at("Phylum", na_if,"") %>% 
+  mutate_at("Class", na_if,"") %>% 
+  mutate_at("Order", na_if,"") %>% 
+  mutate_at("Family", na_if,"") %>% 
+  mutate_at("Genus", na_if,"") %>% 
+  mutate_at("Species", na_if,"") %>% 
+  
+  # Get rid of the the common string "Soil microbial communities from "
+  mutate_at("Genome Name", str_replace, "Terrestrial soil microbial communities from ", "") %>% 
+  # Use the first `-` to split the column in two
+  separate(`Genome Name`, c("Site","Sample Name"), " - ") %>% 
+  # Get rid of the the common string "S-comp-1"
+  mutate_at("Sample Name", str_replace, "-comp-1", "") %>%
+  # separate the Sample Name into Site ID and plot info
+  separate(`Sample Name`, c("Site ID","subplot.layer.date"), "_", remove = FALSE,) %>% 
+  # separate the plot info into 3 columns
+  separate(`subplot.layer.date`, c("Subplot", "Layer", "Date"), "-") 
+```
+
+```{r}
+NEON_metagenomes <- read_tsv("data/NEON/exported_img_data_Gs0161344_NEON.tsv") %>% 
+  select(-c(`Domain`, `Sequencing Status`, `Sequencing Center`)) %>% 
+  rename(`Genome Name` = `Genome Name / Sample Name`) %>% 
+  filter(str_detect(`Genome Name`, 're-annotation', negate = T)) %>% 
+  filter(str_detect(`Genome Name`, 'WREF plot', negate = T)) 
+```
+
+```{r}
+NEON_metagenomes <- NEON_metagenomes %>% 
+  # Get rid of the the common string "Soil microbial communities from "
+  mutate_at("Genome Name", str_replace, "Terrestrial soil microbial communities from ", "") %>% 
+  # Use the first `-` to split the column in two
+  separate(`Genome Name`, c("Site","Sample Name"), " - ") %>% 
+  # Get rid of the the common string "-comp-1"
+  mutate_at("Sample Name", str_replace, "-comp-1", "") %>%
+  # separate the Sample Name into Site ID and plot info
+  separate(`Sample Name`, c("Site ID","subplot.layer.date"), "_", remove = FALSE,) %>% 
+  # separate the plot info into 3 columns
+  separate(`subplot.layer.date`, c("Subplot", "Layer", "Date"), "-") 
+```
+
+```{r}
+NEON_chemistry <- read_tsv("data/NEON/neon_plot_soilChem1_metadata.tsv") %>% 
+  # remove -COMP from genomicsSampleID
+  mutate_at("genomicsSampleID", str_replace, "-COMP", "")
+```
+
+```{r}
+NEON_MAGs_metagenomes_chemistry <- NEON_MAGs %>% 
+  left_join(NEON_metagenomes, by = "Sample Name") %>% 
+  left_join(NEON_chemistry, by = c("Sample Name" = "genomicsSampleID"))
+```
+
+```{r}
+tree_arc <- read.tree("data/NEON/gtdbtk.ar53.decorated.tree")
+tree_bac <- read.tree("data/NEON/gtdbtk.bac120.decorated.tree")
+```
+
+```{r}
+
+node_vector_bac = c(tree_bac$tip.label,tree_bac$node.label)
+
+grep("Dormibacterota", node_vector_bac, value = TRUE)
+```
+
+```{r}
+match(grep("Dormibacterota", node_vector_bac, value = TRUE), node_vector_bac)
+```
+
+```{r}
+tree_bac_node_Dormibacterota <- Preorder(tree_bac)
+tree_Dormibacterota <- Subtree(tree_bac_node_Dormibacterota, 1712)
+```
+
+
+```{r}
+ggtree(tree_Dormibacterota)  %<+%
+  NEON_MAGs_metagenomes_chemistry + 
+  geom_tiplab(size=2, hjust=-.1) +
+  xlim(0,20) +
+  geom_point(mapping=aes(color=`Ecosystem Subtype`)) 
+```
+
+
+```{r}
+ggtree(tree_Dormibacterota)  %<+%
+  NEON_MAGs_metagenomes_chemistry + 
+  geom_tippoint(aes(colour=`Bin Completeness`)) + 
+  scale_colour_gradient(low='green', high='yellow') +
+  geom_tiplab(size=2, hjust=-.4) +
+  xlim(0,16) 
+```
+
+
